@@ -56,9 +56,9 @@ class Registration():
     def unregister(self):
         manager.unregister(self.client_id, self.topic)
 
-    def register_advertisement(self, msg_type, adv_id=None, latch=False, queue_size=100):
+    def register_advertisement(self, msg_type, adv_id=None, latch=False, queue_size=100, tcp_nodelay=False):
         # Register with the publisher manager, propagating any exception
-        manager.register(self.client_id, self.topic, msg_type, latch=latch, queue_size=queue_size)
+        manager.register(self.client_id, self.topic, msg_type, latch=latch, queue_size=queue_size, tcp_nodelay=tcp_nodelay)
 
         self.clients[adv_id] = True
 
@@ -102,6 +102,7 @@ class Advertise(Capability):
         msg_type = message["type"]
         latch = message.get("latch", False)
         queue_size = message.get("queue_size", 100)
+        tcp_nodelay = message.get("tcp_nodelay", False)
 
         if Advertise.topics_glob is not None and Advertise.topics_glob:
             self.protocol.log("debug", "Topic security glob enabled, checking topic: " + topic)
@@ -123,7 +124,7 @@ class Advertise(Capability):
             self._registrations[topic] = Registration(client_id, topic)
 
         # Register, propagating any exceptions
-        self._registrations[topic].register_advertisement(msg_type, aid, latch, queue_size)
+        self._registrations[topic].register_advertisement(msg_type, aid, latch, queue_size, tcp_nodelay)
 
     def unadvertise(self, message):
         # Pull out the ID

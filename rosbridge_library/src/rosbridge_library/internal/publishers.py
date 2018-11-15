@@ -122,7 +122,7 @@ class MultiPublisher():
     Provides an API to publish messages and register clients that are using
     this publisher """
 
-    def __init__(self, topic, msg_type=None, latched_client_id=None, queue_size=100):
+    def __init__(self, topic, msg_type=None, latched_client_id=None, queue_size=100, tcp_nodelay=False):
         """ Register a publisher on the specified topic.
 
         Keyword arguments:
@@ -131,6 +131,8 @@ class MultiPublisher():
         provided, an attempt will be made to infer the topic type
         latch    -- (optional) if a client requested this publisher to be latched,
                     provide the client_id of that client here
+        queue_size  -- (optional) rospy publisher queue_size to use
+        tcp_nodelay -- (optional) whether rospy publisher should use tcp_nodelay
 
         Throws:
         TopicNotEstablishedException -- if no msg_type was specified by the
@@ -164,7 +166,10 @@ class MultiPublisher():
         self.latched_client_id = latched_client_id
         self.topic = topic
         self.msg_class = msg_class
-        self.publisher = Publisher(topic, msg_class, latch=(latched_client_id!=None), queue_size=queue_size)
+        self.publisher = Publisher(topic, msg_class, latch=(latched_client_id!=None), queue_size=queue_size,
+                                   tcp_nodelay=tcp_nodelay)
+        print topic
+        print tcp_nodelay
         self.listener = PublisherConsistencyListener()
         self.listener.attach(self.publisher)
 
@@ -256,18 +261,19 @@ class PublisherManager():
         self.unregister_timers = {}
         self.unregister_timeout = 10.0
 
-    def register(self, client_id, topic, msg_type=None, latch=False, queue_size=100):
+    def register(self, client_id, topic, msg_type=None, latch=False, queue_size=100, tcp_nodelay=False):
         """ Register a publisher on the specified topic.
 
         Publishers are shared between clients, so a single MultiPublisher
         instance is created per topic, even if multiple clients register.
 
         Keyword arguments:
-        client_id  -- the ID of the client making this request
-        topic      -- the name of the topic to publish on
-        msg_type   -- (optional) the type to publish
-        latch      -- (optional) whether to make this publisher latched
-        queue_size -- (optional) rospy publisher queue_size to use
+        client_id   -- the ID of the client making this request
+        topic       -- the name of the topic to publish on
+        msg_type    -- (optional) the type to publish
+        latch       -- (optional) whether to make this publisher latched
+        queue_size  -- (optional) rospy publisher queue_size to use
+        tcp_nodelay -- (optional) whether rospy publisher should use tcp_nodelay
 
         Throws:
         Exception -- exceptions are propagated from the MultiPublisher if
@@ -278,7 +284,7 @@ class PublisherManager():
         latched_client_id = client_id if latch else None
         if not topic in self._publishers:
             self._publishers[topic] = MultiPublisher(topic, msg_type, latched_client_id,
-             queue_size=queue_size)
+             queue_size=queue_size, tcp_nodelay=tcp_nodelay)
         elif latch and self._publishers[topic].latched_client_id != client_id:
             logwarn("Client ID %s attempted to register topic [%s] as latched " +
                     "but this topic was previously registered." % (client_id, topic))

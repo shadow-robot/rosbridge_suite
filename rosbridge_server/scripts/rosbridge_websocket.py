@@ -88,7 +88,7 @@ if __name__ == "__main__":
     port = rospy.get_param('~port', 9090)
     address = rospy.get_param('~address', "")
     # Publisher for number of connected clients
-    RosbridgeWebSocket.client_count_pub = rospy.Publisher('client_count', Int32, queue_size=10, latch=True)
+    RosbridgeWebSocket.client_count_pub = rospy.Publisher('client_count', Int32, queue_size=10, latch=True, tcp_nodelay=True)
     RosbridgeWebSocket.client_count_pub.publish(0)
 
     # Get the glob strings and parse them as arrays.
