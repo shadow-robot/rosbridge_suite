@@ -168,8 +168,6 @@ class MultiPublisher():
         self.msg_class = msg_class
         self.publisher = Publisher(topic, msg_class, latch=(latched_client_id!=None), queue_size=queue_size,
                                    tcp_nodelay=tcp_nodelay)
-        print topic
-        print tcp_nodelay
         self.listener = PublisherConsistencyListener()
         self.listener.attach(self.publisher)
 
